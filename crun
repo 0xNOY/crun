@@ -5,6 +5,9 @@ import subprocess
 from pathlib import Path
 
 
+outputs_dir = Path(".crun").absolute()
+
+
 def main():
     if len(sys.argv) < 2:
         print(
@@ -34,10 +37,16 @@ def main():
         print("Not a C file")
         return
 
-    output_path = Path(f"{file.name}.out").absolute()
+    output_path = outputs_dir / f"{file.name}.out"
     if "-o" in sys.argv[2:]:
         output_path = Path(sys.argv[sys.argv.index("-o") + 1]).absolute()
     else:
+        if not outputs_dir.exists():
+            outputs_dir.mkdir()
+        elif not outputs_dir.is_dir():
+            print(f"Error: {str(outputs_dir)} is not a directory")
+            return
+
         sys.argv.append("-o")
         sys.argv.append(output_path)
 
