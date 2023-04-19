@@ -1,0 +1,47 @@
+#!/bin/python
+
+import sys
+import subprocess
+from pathlib import Path
+
+
+def main():
+    if len(sys.argv) < 2:
+        print(
+            "Usage: crun <FILE> [clang/clang++ options]\n"
+            "Example:\n"
+            "    crun main.c -O3\n"
+            "    crun main.cpp -O3 -std=c++17"
+        )
+        return
+
+    file = Path(sys.argv[1]).absolute()
+
+    if not file.exists():
+        print("File not found")
+        return
+
+    if not file.is_file():
+        print("Not a file")
+        return
+
+    clang = ""
+    if file.suffix == ".c":
+        clang = "clang"
+    elif file.suffix == ".cpp":
+        clang = "clang++"
+    else:
+        print("Not a C file")
+        return
+
+    output_path = Path(f"{file.name}.out").absolute()
+
+    # compile
+    subprocess.call([clang, file, "-o", output_path, *sys.argv[2:]])
+
+    # run
+    subprocess.call([output_path])
+
+
+if __name__ == "__main__":
+    main()
