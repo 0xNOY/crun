@@ -1,14 +1,13 @@
 #!/bin/python
 
-import sys
 import subprocess
+import sys
 from pathlib import Path
-
 
 outputs_dir = Path(".crun").absolute()
 
 
-def main():
+def main() -> int:
     if len(sys.argv) < 2:
         print(
             "Usage: crun <FILE> [clang/clang++ options]\n"
@@ -16,28 +15,32 @@ def main():
             "    crun main.c -O3\n"
             "    crun main.cpp -O3 -std=c++17"
         )
-        return
+        return 0
 
     file = Path(sys.argv[1]).absolute()
 
     if not file.exists():
         print("File not found")
-        return
+        return 1
 
     if not file.is_file():
         print("Not a file")
-        return
+        return 1
 
-    clang = ""
+    building_cmd = []
+
     if file.suffix == ".c":
-        clang = "clang"
+        building_cmd.append("clang")
     elif file.suffix == ".cpp":
-        clang = "clang++"
+        building_cmd.append("clang++")
     else:
         print("Not a C file")
-        return
+        return 1
+
+    building_cmd.append(file)
 
     output_path = outputs_dir / f"{file.name}.out"
+
     if "-o" in sys.argv[2:]:
         output_path = Path(sys.argv[sys.argv.index("-o") + 1]).absolute()
     else:
@@ -45,17 +48,23 @@ def main():
             outputs_dir.mkdir()
         elif not outputs_dir.is_dir():
             print(f"Error: {str(outputs_dir)} is not a directory")
-            return
+            return 1
 
-        sys.argv.append("-o")
-        sys.argv.append(output_path)
+        building_cmd.append("-o")
+        building_cmd.append(output_path)
 
-    # compile
-    subprocess.call([clang, file, *sys.argv[2:]])
+    building_cmd.extend(sys.argv[2:])
 
-    # run
+    c = subprocess.call(building_cmd)
+
+    if c != 0:
+        print("Error while building")
+        return c
+
     subprocess.call([output_path])
+
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
